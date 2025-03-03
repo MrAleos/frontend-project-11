@@ -106,6 +106,27 @@ const addFeed = (parseData) => { // функция добавления фида
     watchedState.feeds.unshift(parseData.feeds); // добавляем через вотчер в состояние для отслеживания изменений
 };
 
+const updatePosts = async (url) => { // функция для загрузки новых постов
+    try {
+      const content = await load(url); // загружаем данные
+      const { posts } = parse(content); // получаем данные после загрузки
+  
+      const newPosts = posts.filter((post) => 
+        !watchedState.posts.some(existingPost => existingPost.link === post.link)
+      ); // фильтруем данные сравнивая id каждого поста с id новых постов 
+      console.log('тест1') // доходит только до сюда
+        if (newPosts.length > 0) { // если массив не пустой, значит посты есть
+            console.log('тест2')
+            addPosts({ posts: newPosts }); // добавляем новый пост
+            console.log('тест13')
+      }
+    } catch (error) { // если ошибка при обновлении постов
+      console.error('Ошибка при обновлении постов:', error);
+    } finally { // всегда выполняем рекурсивный запуск функции через каждые 5 секунд
+      setTimeout(() => updatePosts(url), 5000);
+    }
+  };
+
 const renderPost = (state) => {
     const postsContainer = document.querySelector('.posts');
     postsContainer.innerHTML = '';
@@ -204,6 +225,7 @@ form.addEventListener('submit', async (e) => { // Слушатель по кно
             const parser = parse(content); // Вызов функции parse для парсинга данных
             addPosts(parser); // добавление постов
             addFeed(parser); // добавление фидов
+            updatePosts(url);
         } catch (parseError) {
             watchedState.form = { isValue: false, error: parseError } // если парсер словил ошибку (РАБОТАЕТ НЕКОРРЕКТНО, ТАК КАК СНАЧАЛА ОТОБРАЖАЕТ ЧТО ССЫЛКА ВАЛИДНА. НУЖНО ДОРАБОТАТЬ ЛОГИКУ)
         }
@@ -226,3 +248,5 @@ const renderForm = (state) => { // Рендер формы в зависимос
     }
 
 };
+
+
