@@ -106,27 +106,33 @@ const addFeed = (parseData) => { // функция добавления фида
     watchedState.feeds.unshift(parseData.feeds); // добавляем через вотчер в состояние для отслеживания изменений
 };
 
-const updatePosts = async (url) => { // функция для загрузки новых постов
+const updatePosts = async (urls) => { // фунция обновления постов, принимающая массив urls
     try {
-      const content = await load(url); // загружаем данные
-      const { posts } = parse(content); // получаем данные после загрузки
+      const promises = urls.map((url) => load(url)); // создаем массив промисов, каждый из которых выполняет функцию load для соответствующего url
+      const contents = await Promise.all(promises); // ожидаем выполнения всех промисов и сохраняем результаты в массив contents
+      const newPosts = []; // создаем пустой массив для новых постов
   
-      const newPosts = posts.filter((post) => 
-        !watchedState.posts.some(existingPost => existingPost.link === post.link)
-      ); // фильтруем данные сравнивая id каждого поста с id новых постов 
-      console.log('тест1') // доходит только до сюда
-        if (newPosts.length > 0) { // если массив не пустой, значит посты есть
-            console.log('тест2')
-            addPosts({ posts: newPosts }); // добавляем новый пост
-            console.log('тест13')
+      contents.forEach((content) => { // проходимся по каждому элементу массива contents
+        const { posts } = parse(content); // парсим контент и извлекаем массив постов
+        const existingPostIds = watchedState.posts.map((post) => post.id); // извлекаем массив существующих id постов из состояния
+        const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.id)); // отбираем только те посты, id которых нет в массиве existingPostIds
+        newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
+      });
+  
+      if (newPosts.length > 0) { // если есть новые посты
+        watchedState.posts = [...newPosts, ...watchedState.posts]; // добавляем новые посты перед старыми постами в состоянии
       }
-    } catch (error) { // если ошибка при обновлении постов
-      console.error('Ошибка при обновлении постов:', error);
-    } finally { // всегда выполняем рекурсивный запуск функции через каждые 5 секунд
-      setTimeout(() => updatePosts(url), 5000);
+    } catch (error) { // ловим возможные ошибки
+      throw new Error('updatePosts error');
+      
+    } finally {
+      setTimeout(() => updatePosts(watchedState.urls), 5000); // рекурсивно вызываем функцию updatePosts через 5 секунд
     }
   };
-
+  
+  updatePosts(watchedState.urls); // начальный вызов функции updatePosts
+  
+  
 const renderPost = (state) => {
     const postsContainer = document.querySelector('.posts');
     postsContainer.innerHTML = '';
@@ -152,7 +158,7 @@ const renderPost = (state) => {
         postLink.classList.add('h6', 'text-primary', 'text-decoration-underline'); // стили для синего цвета и подчеркивания
         postLink.href = post.link; // задаем ссылку
         postLink.target = '_blank'; // открываем ссылку в новом окне
-        postLink.textContent = post.title // текст ссылки = заголовок поста
+        postLink.textContent = `${post.title} (ID: ${post.id})`; // текст ссылки = заголовок поста + ID поста (ПОТОМ УБРАТЬ ID)
 
         const postDescription = document.createElement('p'); // создаем описание поста
         postDescription.classList.add('small', 'text-black-50');
@@ -225,7 +231,6 @@ form.addEventListener('submit', async (e) => { // Слушатель по кно
             const parser = parse(content); // Вызов функции parse для парсинга данных
             addPosts(parser); // добавление постов
             addFeed(parser); // добавление фидов
-            updatePosts(url);
         } catch (parseError) {
             watchedState.form = { isValue: false, error: parseError } // если парсер словил ошибку (РАБОТАЕТ НЕКОРРЕКТНО, ТАК КАК СНАЧАЛА ОТОБРАЖАЕТ ЧТО ССЫЛКА ВАЛИДНА. НУЖНО ДОРАБОТАТЬ ЛОГИКУ)
         }

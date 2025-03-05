@@ -309,3 +309,25 @@ const renderForm = (state) => { // Рендер формы в зависимос
     }
 
 };
+
+
+/* const updatePosts = async (url) => { // функция для загрузки новых постов
+    try {
+      const content = await load(url); // загружаем данные
+      const { posts } = parse(content); // получаем данные после загрузки
+  
+      const newPosts = posts.filter((post) => 
+        !watchedState.posts.some(existingPost => existingPost.link === post.link)
+      ); // фильтруем данные сравнивая id каждого поста с id новых постов 
+      console.log('тест1') // доходит только до сюда
+        if (newPosts.length > 0) { // если массив не пустой, значит посты есть
+            console.log('тест2')
+            addPosts({ posts: newPosts }); // добавляем новый пост
+            console.log('тест13')
+      }
+    } catch (error) { // если ошибка при обновлении постов
+      console.error('Ошибка при обновлении постов:', error);
+    } finally { // всегда выполняем рекурсивный запуск функции через каждые 5 секунд
+      setTimeout(() => updatePosts(url), 5000);
+    }
+  }; */
