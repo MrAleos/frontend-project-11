@@ -6,6 +6,23 @@ import * as yup from "yup";
 import onChange from 'on-change';
 import axios from 'axios';
 import _ from 'lodash';
+import i18next from 'i18next';
+import resources from './locales/index.js';
+
+const timeUdpate = 5000; // время через которое пост обновится
+const defaultLanguage = 'ru'; // язык по умолчанию
+const elements = {
+    form: document.querySelector('.rss-form'), // Находим форму в разметке
+    input: document.querySelector('#url-input'), // Инпут формы
+    submitButton: document.querySelector('button[type="submit"]'), // кнопка "добавить"
+    feedback: document.querySelector('.feedback'), // низ формы, где дается ответ клиенту после ввода url
+    feedsContainer: document.querySelector('.feeds'), // находим контейнер фида
+    modal: document.getElementById('modal'), // получение элемента модального окна.
+    modalTitle: document.querySelector('.modal-title'), // получение элемента заголовка модального окна
+    modalBody: document.querySelector('.modal-body'), // получение элемента тела модального окна
+    fullArticleLink: document.querySelector('.full-article'), // получение элемента ссылки на полную статью
+    postsContainer: document.querySelector('.posts')
+}
 
 const initialState = {
     form: {
@@ -18,13 +35,19 @@ const initialState = {
     readPosts: [] // массив для хранения ID прочитанных постов
 };
 
+const i18n = i18next.createInstance(); // создаем i18n для текстов
+i18n.init({
+    lng: defaultLanguage,
+    debug: true,
+    resources
+});
 
 const load = (url) => { // функция для загрузки данных с переданного пользователем сайта
     const fullUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`
         return axios(fullUrl) // грузим данные с url
             .then((response) => {
                 if (response.status !== 200) { //затем, если загрузка не прошла успешно выдаем ошибку
-                    throw new Error('Ошибка сети');
+                    throw new Error(i18n.t('errors.networkError'));
                 } 
                 return response.data; // иначе возвращаем загруженные данные
             })
@@ -39,12 +62,12 @@ const parse = (content) => { // парсинг данных для переда�
 
     const parseError = xmlData.querySelector("parsererror"); // проверка, что если строка невалидна как XML, то выбросит ошибку
         if (parseError) {
-            throw new Error('Ресурс не содержит валидный RSS');
+            throw new Error(i18n.t('errors.notRssUrl'));
         }
     
     const feedChannel = xmlData.querySelector('channel'); //получение данных по фиду url
         if (!feedChannel) { //если не содержит канал, то невалидный
-            throw new Error('Ресурс не содержит валидный RSS');
+            throw new Error(i18n.t('errors.notRssUrl'));
         }
 
     const feedTitle = feedChannel.querySelector('title').textContent;
@@ -72,23 +95,23 @@ const parse = (content) => { // парсинг данных для переда�
 const watchedState = onChange(initialState, (path) => { //вотчер состояния, который будет передавать актуальное состояние в рендеры
     switch (path) {
         case 'form':
-            renderForm(watchedState); // Вызываем renderForm при изменении состояния формы
+            renderForm(watchedState, elements, i18n); // Вызываем renderForm при изменении состояния формы
             break;
         case 'feeds':
-            renderFeed(watchedState); // Вызываем renderFeed при изменении состояния (добавления) фидов
+            renderFeed(watchedState, elements, i18n); // Вызываем renderFeed при изменении состояния (добавления) фидов
             break;
         case 'posts':
-            renderPost(watchedState); // Вызываем renderPost при изменении состояния (добавления) постов
+            renderPost(watchedState, elements, i18n); // Вызываем renderPost при изменении состояния (добавления) постов
         case 'readPosts': // Добавляем обработку изменений в readPosts
-            renderPost(watchedState);
+            renderPost(watchedState, elements, i18n);
             break;
     }
 });
 
 const createSchema = (existingUrls) => yup.object().shape({
     url: yup.string()
-        .url('Ссылка должна быть валидным URL') // Проверка на валидность URL
-        .notOneOf(existingUrls, 'RSS уже существует') // Проверка на существование URL в массиве
+        .url(i18n.t('errors.notUrl')) // Проверка на валидность URL
+        .notOneOf(existingUrls, i18n.t('errors.existUrl')) // Проверка на существование URL в массиве
 });
 
 const validateUrl = (url, existingUrls) => {
@@ -131,16 +154,16 @@ const updatePosts = (urls) => { // фунция обновления посто�
     })
       
         .finally(() => {
-            setTimeout(() => updatePosts(watchedState.urls), 5000); // рекурсивно вызываем функцию updatePosts через 5 секунд
+            setTimeout(() => updatePosts(watchedState.urls), timeUdpate); // рекурсивно вызываем функцию updatePosts через 5 секунд
     })
   };
   
   updatePosts(watchedState.urls); // начальный вызов функции updatePosts
   
-const renderModal = (post) => { // рендер модалки
+const renderModal = (post, elements) => { // рендер модалки
     const viewButton = document.createElement('button'); // создаем кнопку для просмотра поста
     viewButton.classList.add('btn', 'btn-primary', 'view-button'); // добавление классов для стилизации кнопки
-    viewButton.textContent = 'Просмотр'; // установка текста кнопки
+    viewButton.textContent = i18n.t('buttons.modalButtonName'); // установка текста кнопки
     viewButton.setAttribute('data-bs-toggle', 'modal'); // добавление атрибута для включения модального окна
     viewButton.setAttribute('data-bs-target', '#modal'); // установка цели модального окна
     viewButton.setAttribute('data-title', post.title); // установка цели модального окна.
@@ -149,8 +172,8 @@ const renderModal = (post) => { // рендер модалки
     return viewButton;
   }
   
-  const renderPost = (state) => {
-    const postsContainer = document.querySelector('.posts');
+  const renderPost = (state, elements, i18n) => {
+    const { postsContainer } = elements;
     postsContainer.innerHTML = '';
     const cardDiv = document.createElement('div');
     cardDiv.classList.add('card', 'border-0'); // карточка
@@ -160,7 +183,7 @@ const renderModal = (post) => { // рендер модалки
 
     const title = document.createElement('h2'); // общий заголовок
     title.classList.add('card-title', 'h4');
-    title.textContent = 'Посты';
+    title.textContent = i18n.t('items.postMain');
     cardBody.append(title);    
 
     const listGroup = document.createElement('ul'); // список постов
@@ -216,17 +239,13 @@ const renderModal = (post) => { // рендер модалки
   
 
 // Слушатель для отображения модального окна
-const modal = document.getElementById('modal'); // получение элемента модального окна.
-modal.addEventListener('show.bs.modal', (event) => { // добавление обработчика событий на показ модального окна
+elements.modal.addEventListener('show.bs.modal', (event) => { // добавление обработчика событий на показ модального окна
   const button = event.relatedTarget; // получение кнопки, которая вызвала модальное окно
   const title = button.getAttribute('data-title'); // получение заголовка из атрибута кнопки
   const description = button.getAttribute('data-description'); // получение описания из атрибута кнопки
   const link = button.getAttribute('data-link'); // получение ссылки из атрибута кнопки
 
-  const modalTitle = modal.querySelector('.modal-title'); // получение элемента заголовка модального окна
-  const modalBody = modal.querySelector('.modal-body'); // получение элемента тела модального окна
-  const fullArticleLink = modal.querySelector('.full-article'); // получение элемента ссылки на полную статью
-
+  const { modalTitle, modalBody, fullArticleLink } = elements;
   modalTitle.textContent = title; // установка заголовка модального окна
   modalBody.textContent = description; // установка описания модального окна
   fullArticleLink.href = link; // установка ссылки на полную статью в модальном окне
@@ -234,8 +253,8 @@ modal.addEventListener('show.bs.modal', (event) => { // добавление о�
 
 
   
-const renderFeed = (state) => { //рендер фида
-    const feedsContainer = document.querySelector('.feeds'); // находим контейнер фида
+const renderFeed = (state, elements, i18n) => { //рендер фида
+    const { feedsContainer } = elements // контейнер фида
     feedsContainer.innerHTML = ''; //очищаем контейнер фида
     const cardDiv = document.createElement('div');
     cardDiv.classList.add('card', 'border-0'); // карточка
@@ -245,7 +264,7 @@ const renderFeed = (state) => { //рендер фида
 
     const title = document.createElement('h2'); // общий заголовок
     title.classList.add('card-title', 'h4');
-    title.textContent = 'Фиды';
+    title.textContent = i18n.t('items.feedMain');
     cardBody.append(title);
 
     const listGroup = document.createElement('ul'); // список фидов
@@ -271,21 +290,19 @@ const renderFeed = (state) => { //рендер фида
     feedsContainer.append(cardDiv); // добавляем карточку в контейнер feeds
 }
 
-const form = document.querySelector('.rss-form'); // Находим форму в разметке
-const input = document.querySelector('#url-input'); // Инпут формы
-const submitButton = form.querySelector('button[type="submit"]'); // кнопка "добавить"
-
-const disableButton = () => {
+const disableButton = (elements) => {
+    const { submitButton } = elements; // кнопка "Добавить"
     submitButton.disabled = true; // // кнопка становится неактивной (серой, некликабельной) (свойство disabled есть в dom для кнопок)
     submitButton.classList.add('disabled'); // визуально показываем что неактивна
 };
 
-const enableButton = () => {
+const enableButton = (elements) => {
+    const { submitButton } = elements; // кнопка "Добавить"
     submitButton.disabled = false; // кнопка становится активна
     submitButton.classList.remove('disabled'); // визуально показываем что активна
 };
 
-form.addEventListener('submit', async (e) => { // Слушатель по кнопке "Добавить" в форме
+elements.form.addEventListener('submit', async (e) => { // Слушатель по кнопке "Добавить" в форме
     e.preventDefault();
     e.stopImmediatePropagation();
     const formData = new FormData(e.target);
@@ -322,27 +339,27 @@ form.addEventListener('submit', async (e) => { // Слушатель по кно
                 status: 'added',  // то добавляем состояние успешного добавления Url
                 error: '' 
             };
-            form.reset(); // Сбрасываем форму
-            input.focus(); // Ставим фокус на инпут
+            elements.form.reset(); // Сбрасываем форму
+            elements.input.focus(); // Ставим фокус на инпут
         }) 
         .catch((error) => { // Обрабатываем ошибки загрузки или парсинга или сети
             if (error !== 'Validation failed') { // если не ошибка валидации, а загрузки/сети или парсера (то есть если не ошибка того, что это не url в принципе, которая обрабатывается раньше)
                 watchedState.form = { 
                     status: 'filling', // возвращаем состояние статус "заполнения"
-                    error: error.message === 'Ресурс не содержит валидный RSS' // отображаем сообщение об ошибке (в зависимости от текста самой ошибки)
-                        ? 'Ресурс не содержит валидный RSS' 
-                        : 'Ошибка сети'
+                    error: error.message === i18n.t('errors.notRssUrl') // отображаем сообщение об ошибке (в зависимости от текста самой ошибки)
+                        ? i18n.t('errors.notRssUrl') 
+                        : i18n.t('errors.networkError')
                 };
             }
         })
 });
 
-const renderForm = (state) => { // Рендер формы в зависимости от состояния
-    const feedback = document.querySelector('.feedback');
+const renderForm = (state, elements, i18n) => { // Рендер формы в зависимости от состояния
+    const { feedback } = elements; // фидбэк формы
     
     switch (state.form.status) {
         case 'filling': // если состояние заполнения
-            enableButton(); // включаем кнопку добавить
+            enableButton(elements); // включаем кнопку добавить
             if (state.form.error) { // проверяем есть ли ошибка в стейте
                 feedback.textContent = state.form.error; // Выводим сообщение об ошибке
                 feedback.classList.remove('text-success');
@@ -354,13 +371,13 @@ const renderForm = (state) => { // Рендер формы в зависимос
             break;
     
         case 'sending': // если состояние загрузки
-            disableButton(); // отключаем на это время кнопку добавить
-            feedback.textContent = 'Загрузка...';
+            disableButton(elements); // отключаем на это время кнопку добавить
+            feedback.textContent = i18n.t('status.loadingUrl');
             feedback.classList.remove('text-danger', 'text-success');
             break;
         case 'added': // если ошибки при загрузке не было, то включаем кнопку и делаем соответствующую стилизацию
-            enableButton();
-            feedback.textContent = 'RSS успешно загружен';
+            enableButton(elements);
+            feedback.textContent = i18n.t('status.successLoadUrl');
             feedback.classList.remove('text-danger');
             feedback.classList.add('text-success');
             break;
