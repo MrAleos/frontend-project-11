@@ -40,7 +40,7 @@ const renderModal = (post, i18n) => { // рендер модалки
     
        // Если пост прочитан, убираем синий цвет и подчеркивание, делаем серым
        if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
-        postLink.classList.add('text-muted'); // то добавляем серый цвет
+        postLink.classList.add('fw-bold', 'text-muted'); // то добавляем серый цвет
         postLink.classList.remove('text-primary', 'text-decoration-underline');
     } else {
         postLink.classList.add('text-primary', 'text-decoration-underline'); // если нет, то синий цвет для непрочитанных
