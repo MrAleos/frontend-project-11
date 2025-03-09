@@ -41,7 +41,6 @@ const renderModal = (post, i18n) => { // рендер модалки
        // Если пост прочитан, убираем синий цвет и подчеркивание, делаем серым
        if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
         postLink.classList.add('text-muted'); // то добавляем серый цвет
-        postLink.classList.remove('text-primary', 'text-decoration-underline');
     } else {
         postLink.classList.add('text-primary', 'text-decoration-underline'); // если нет, то синий цвет для непрочитанных
     }
@@ -56,6 +55,8 @@ const renderModal = (post, i18n) => { // рендер модалки
         postLink.addEventListener('click', () => { // если пользователь нажал на пост
             if (!watchedState.readPosts.includes(post.link)) { // и в прочитанных постах нет id поста
                 watchedState.readPosts.push(post.link); // то, добавляем ID в массив прочитанных
+                postLink.classList.add('text-muted');
+                postLink.classList.remove('text-primary', 'text-decoration-underline');
             }
         });
 
@@ -63,6 +64,8 @@ const renderModal = (post, i18n) => { // рендер модалки
         viewButton.addEventListener('click', () => { // если нажал на кнопку просмотра
             if (!watchedState.readPosts.includes(post.link)) { // id поста нет в стэйте прочитанных постов
                 watchedState.readPosts.push(post.link); // то, добавляем ID в массив прочитанных
+                postLink.classList.add('text-muted');
+                postLink.classList.remove('text-primary', 'text-decoration-underline');
             }
         });
 
