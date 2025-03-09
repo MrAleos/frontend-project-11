@@ -4,7 +4,6 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "test": "jest --colors"
   },
   "repository": {
     "type": "git",
@@ -16,13 +15,6 @@
     "url": "https://github.com/hexlet-boilerplates/webpack-package/issues"
   },
   "homepage": "https://github.com/hexlet-boilerplates/webpack-package#readme",
-  "jest": {
-    "verbose": true,
-    "testEnvironmentOptions": {
-      "url": "http://localhost/"
-    },
-    "testEnvironment": "jsdom"
-  },
   "main": "src/init.js",
   "devDependencies": {
     "@babel/core": "^7.20.12",
@@ -30,7 +22,6 @@
     "@babel/preset-env": "^7.20.2",
     "@eslint/js": "^9.9.1",
     "ajv": "^8.17.1",
-    "babel-jest": "^29.3.1",
     "babel-loader": "^9.1.2",
     "css-loader": "^6.7.3",
     "debug": "^4.3.4",
@@ -38,13 +29,9 @@
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-babel": "^5.3.1",
     "eslint-plugin-import": "^2.27.4",
-    "eslint-plugin-jest": "^27.2.1",
     "file-loader": "^6.2.0",
     "globals": "^15.9.0",
     "html-webpack-plugin": "^5.6.3",
-    "jest": "^29.3.1",
-    "jest-cli": "^29.3.1",
-    "jest-environment-jsdom": "^29.3.1",
     "postcss-loader": "^7.2.4",
     "postcss-preset-env": "^7.8.3",
     "style-loader": "^3.3.1",
