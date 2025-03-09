@@ -29,7 +29,7 @@ const renderModal = (post, i18n) => { // рендер модалки
 
     watchedState.posts.forEach((post) => { // проходимся по массиву posts в состоянии где хранятся объекты постов и создаем элементы для каждого поста
         const listItem = document.createElement('li'); // Создаем элемент списка
-        listItem.classList.add('list-group-item', 'border-0');
+        listItem.classList.add('list-group-item', 'border-0', 'd-flex', 'justify-content-between', 'align-items-start');
 
         const postLink = document.createElement('a'); // создаем ссылку для заголовка
         postLink.classList.add('fw-bold'); // стили для синего цвета и подчеркивания
@@ -42,10 +42,6 @@ const renderModal = (post, i18n) => { // рендер модалки
        if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
         postLink.classList.add('text-muted'); // то добавляем серый цвет
     }
-
-        const postDescription = document.createElement('p'); // создаем описание поста
-        postDescription.classList.add('small', 'text-black-50');
-        postDescription.textContent = post.description;
 
         const viewButton = renderModal(post, i18n); // рендерим кнопку с модалкой для поста
 
@@ -66,8 +62,8 @@ const renderModal = (post, i18n) => { // рендер модалки
                 postLink.classList.remove('text-primary', 'text-decoration-underline');
             }
         });
-
-        listItem.append(postLink, postDescription, viewButton); // добавляем заголовок, описание и кнопку поста в элемент списка
+        
+        listItem.append(postLink, viewButton); // добавляем заголовок, описание и кнопку поста в элемент списка
         listGroup.append(listItem); // добавляем элемент списка в список постов
     });
     
