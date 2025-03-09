@@ -47,6 +47,6 @@ export default {
   ],
   devServer: {
     static: './dist',
-    open: true, 
+    open: true,
   },
 };

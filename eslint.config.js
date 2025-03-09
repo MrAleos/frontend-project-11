@@ -40,6 +40,7 @@ export default [
   ...compat.extends('airbnb-base'),
   {
     rules: {
+      'max-len': 'off',
       'no-underscore-dangle': [
         'error',
         {
