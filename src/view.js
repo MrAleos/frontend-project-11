@@ -32,7 +32,7 @@ const renderModal = (post, i18n) => { // рендер модалки
         listItem.classList.add('list-group-item', 'border-0');
 
         const postLink = document.createElement('a'); // создаем ссылку для заголовка
-        postLink.classList.add('h6', 'text-primary', 'text-decoration-underline'); // стили для синего цвета и подчеркивания
+        postLink.classList.add('fw-bold'); // стили для синего цвета и подчеркивания
         postLink.href = post.link; // задаем ссылку
         postLink.target = '_blank'; // открываем ссылку в новом окне
         postLink.textContent = post.title; // текст ссылки = заголовок поста
@@ -40,7 +40,7 @@ const renderModal = (post, i18n) => { // рендер модалки
     
        // Если пост прочитан, убираем синий цвет и подчеркивание, делаем серым
        if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
-        postLink.classList.add('fw-bold', 'text-muted'); // то добавляем серый цвет
+        postLink.classList.add('text-muted'); // то добавляем серый цвет
         postLink.classList.remove('text-primary', 'text-decoration-underline');
     } else {
         postLink.classList.add('text-primary', 'text-decoration-underline'); // если нет, то синий цвет для непрочитанных
