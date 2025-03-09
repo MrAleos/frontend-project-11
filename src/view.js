@@ -38,11 +38,9 @@ const renderModal = (post, i18n) => { // рендер модалки
         postLink.textContent = post.title; // текст ссылки = заголовок поста
         
     
-       // Если пост прочитан, убираем синий цвет и подчеркивание, делаем серым
+       // стилизация только после прочтения
        if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
         postLink.classList.add('text-muted'); // то добавляем серый цвет
-    } else {
-        postLink.classList.add('text-primary', 'text-decoration-underline'); // если нет, то синий цвет для непрочитанных
     }
 
         const postDescription = document.createElement('p'); // создаем описание поста
