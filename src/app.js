@@ -81,9 +81,7 @@ const app = () => {
 
   const validateUrl = (url, existingUrls) => {
     const schema = createSchema(existingUrls); // Создаём схему с текущим списком URL (existingUrls = текущий список)
-    return schema.validate({ url }) // Проверяем URL по схеме
-      .then(() => ({ isValid: true, error: null })) // затем если ок - возвращаем успех
-      .catch((error) => ({ isValid: false, error: error.message })); // Если ошибка - возвращаем её текст
+    return schema.validate({ url }); // Проверяем URL по схеме (успешно если URL валиден и его нет в existingUrls, либо выбросит ошибку).
   };
 
   const addPosts = (parseData) => { // функция добавления постов
@@ -94,7 +92,7 @@ const app = () => {
     watchedState.feeds.unshift(parseData.feeds); // добавляем через вотчер в состояние для отслеживания изменений
   };
 
-  const updatePosts = (urls) => { // фунция обновления постов, принимающая массив urls  (СКОРЕЕ ВСЕГО НАДО ТУТ ПОДПРАВИТЬ БУДЕТ ДЛЯ ТОГО, ЧТОБЫ ОБНОВЛЕНИЕ ПОСТОВ НЕ СБИВАЛИ СОСТОЯНИЕ ПРОЧИТАННЫХ ПОСТОВ)
+  const updatePosts = (urls) => { // фунция обновления постов, принимающая массив urls  
     const promises = urls.map((url) => load(url)); // создаем массив промисов, каждый из которых выполняет функцию load для соответствующего url
     Promise.all(promises) // ожидаем выполнения всех промисов и сохраняем результаты в массив contents
       .then((contents) => {
@@ -145,15 +143,7 @@ const app = () => {
     const url = formData.get('url').trim(); // Получаем данные того, что ввел пользователь в форме
 
     validateUrl(url, watchedState.urls) // Асинхронно проверяем является ли URL сайтом (watchedState.urls всегда свежий)
-      .then(({ isValid, error }) => {
-        if (!isValid) { // проверяем прошел ли валидацию url (некорректен или есть в списке)
-          watchedState.form = {
-            status: 'filling', // форма в состоянии "заполнения" для того, чтобы пользователь ввел снова данные
-            error, // передаем сообщение об ошибке
-          };
-          return Promise.reject('Validation failed'); // прерываем обработчик, цепочку промисов и переходим к catch, так как валидация не прошла
-        }
-
+      .then(() => {
         // Переходим в состояние отправки, если валидно (на предыдущем if прошло корректно)
         watchedState.form = {
           status: 'sending',
@@ -178,18 +168,18 @@ const app = () => {
         elements.input.focus(); // Ставим фокус на инпут
       })
       .catch((error) => { // Обрабатываем ошибки загрузки или парсинга или сети
-        if (error !== 'Validation failed') { // если не ошибка валидации, а загрузки/сети или парсера (то есть если не ошибка того, что это не url в принципе, которая обрабатывается раньше)
-          let errorMessage;
-          if (error.message === 'invalidRSS') { // проверяем какую ошибку получаем
-            errorMessage = i18n.t('errors.notRssUrl'); // если ошибка о невалидности
-          } else {
-            errorMessage = i18n.t('errors.networkError'); // иначе об ошибке сети
-          }
-          watchedState.form = {
-            status: 'filling', // возвращаем состояние статус "заполнения"
-            error: errorMessage,
-          };
+        let errorMessage;
+        if (error instanceof yup.ValidationError) {
+          errorMessage = error.message; // Ошибка валидации от yup
+        } else if (error.message === 'invalidRSS') {
+          errorMessage = i18n.t('errors.notRssUrl'); // Ошибка парсинга
+        } else {
+          errorMessage = i18n.t('errors.networkError'); // Сетевая ошибка
         }
+        watchedState.form = {
+          status: 'filling', // возвращаем состояние статус "заполнения"
+          error: errorMessage,
+        };
       });
   });
 };
