@@ -27,7 +27,7 @@ const renderPost = (watchedState, elements, i18n) => {
   const listGroup = document.createElement('ul'); // список постов
   listGroup.classList.add('list-group');
 
-  watchedState.posts.forEach((post) => { // проходимся по массиву posts в состоянии где хранятся объекты постов и создаем элементы для каждого поста
+  watchedState.posts.forEach((post) => {
     const listItem = document.createElement('li'); // Создаем элемент списка
     listItem.classList.add('list-group-item', 'border-0', 'd-flex', 'justify-content-between', 'align-items-start');
 
@@ -38,7 +38,7 @@ const renderPost = (watchedState, elements, i18n) => {
     postLink.textContent = post.title; // текст ссылки = заголовок поста
 
     // стилизация только после прочтения
-    if (watchedState.readPosts.includes(post.link)) { // если в стэйте прочитанных постов есть id поста
+    if (watchedState.readPosts.includes(post.link)) {
       postLink.classList.add('text-muted'); // то добавляем серый цвет
     }
 
@@ -62,7 +62,7 @@ const renderPost = (watchedState, elements, i18n) => {
       }
     });
 
-    listItem.append(postLink, viewButton); // добавляем заголовок, описание и кнопку поста в элемент списка
+    listItem.append(postLink, viewButton);
     listGroup.append(listItem); // добавляем элемент списка в список постов
   });
 
@@ -87,7 +87,7 @@ const renderFeed = (watchedState, elements, i18n) => { // рендер фида
   const listGroup = document.createElement('ul'); // список фидов
   listGroup.classList.add('list-group');
 
-  watchedState.feeds.forEach((element) => { // проходимся по массиву feeds в состоянии где хранятся объекты фидов и создаем элементы для каждого фида
+  watchedState.feeds.forEach((element) => {
     const listItem = document.createElement('li'); // Создаем элемент списка
     listItem.classList.add('list-group-item', 'border-0');
 
@@ -99,7 +99,7 @@ const renderFeed = (watchedState, elements, i18n) => { // рендер фида
     feedDescription.classList.add('small', 'text-black-50');
     feedDescription.textContent = element.description;
 
-    listItem.append(feedTitle, feedDescription); // добавляем заголовок и описание фида в элемент списка
+    listItem.append(feedTitle, feedDescription);
     listGroup.append(listItem); // добавляем элемент списка в список фидов
   });
 
@@ -109,7 +109,7 @@ const renderFeed = (watchedState, elements, i18n) => { // рендер фида
 
 const disableButton = (elements) => {
   const { submitButton } = elements; // кнопка "Добавить"
-  submitButton.disabled = true; // // кнопка становится неактивной (серой, некликабельной) (свойство disabled есть в dom для кнопок)
+  submitButton.disabled = true;
   submitButton.classList.add('disabled'); // визуально показываем что неактивна
 };
 

@@ -54,18 +54,18 @@ const app = () => {
       });
   };
 
-  const watchedState = onChange(initialState, (path) => { // вотчер состояния, который будет передавать актуальное состояние в рендеры
+  const watchedState = onChange(initialState, (path) => {
     switch (path) {
       case 'form':
-        renderForm(watchedState, elements, i18n); // Вызываем renderForm при изменении состояния формы
+        renderForm(watchedState, elements, i18n);
         break;
       case 'feeds':
-        renderFeed(watchedState, elements, i18n); // Вызываем renderFeed при изменении состояния (добавления) фидов
+        renderFeed(watchedState, elements, i18n);
         break;
       case 'posts':
-        renderPost(watchedState, elements, i18n); // Вызываем renderPost при изменении состояния (добавления) постов
+        renderPost(watchedState, elements, i18n);
         break;
-      case 'readPosts': // Добавляем обработку изменений в readPosts
+      case 'readPosts':
         renderPost(watchedState, elements, i18n);
         break;
       default:
@@ -80,34 +80,34 @@ const app = () => {
   });
 
   const validateUrl = (url, existingUrls) => {
-    const schema = createSchema(existingUrls); // Создаём схему с текущим списком URL (existingUrls = текущий список)
-    return schema.validate({ url }); // Проверяем URL по схеме (успешно если URL валиден и его нет в existingUrls, либо выбросит ошибку).
+    const schema = createSchema(existingUrls);
+    return schema.validate({ url });
   };
 
   const addPosts = (parseData) => { // функция добавления постов
-    watchedState.posts = [...parseData.posts, ...watchedState.posts]; // создаем новый массив, где сначала идут новые посты (parseData.posts), а затем старые (watchedState.posts)
+    watchedState.posts = [...parseData.posts, ...watchedState.posts];
   };
 
   const addFeed = (parseData) => { // функция добавления фида
-    watchedState.feeds.unshift(parseData.feeds); // добавляем через вотчер в состояние для отслеживания изменений
+    watchedState.feeds.unshift(parseData.feeds);
   };
 
-  const updatePosts = (urls) => { // фунция обновления постов, принимающая массив urls  
-    const promises = urls.map((url) => load(url)); // создаем массив промисов, каждый из которых выполняет функцию load для соответствующего url
-    Promise.all(promises) // ожидаем выполнения всех промисов и сохраняем результаты в массив contents
+  const updatePosts = (urls) => {
+    const promises = urls.map((url) => load(url));
+    Promise.all(promises)
       .then((contents) => {
         const newPosts = []; // создаем пустой массив для новых постов
 
         contents.forEach((content) => { // проходимся по каждому элементу массива contents
           const { posts } = parse(content); // парсим контент и извлекаем массив постов
-          const existingPostIds = watchedState.posts.map((post) => post.link); // извлекаем массив существующих id постов из состояния
-          const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link)); // отбираем только те посты, id которых нет в массиве existingPostIds
+          const existingPostIds = watchedState.posts.map((post) => post.link);
+          const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link));
 
           newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
         });
 
         if (newPosts.length > 0) { // если есть новые посты
-          watchedState.posts = [...newPosts, ...watchedState.posts]; // добавляем новые посты перед старыми постами в состоянии
+          watchedState.posts = [...newPosts, ...watchedState.posts];
         }
       })
 
@@ -117,7 +117,7 @@ const app = () => {
       })
 
       .finally(() => {
-        setTimeout(() => updatePosts(watchedState.urls), timeUdpate); // рекурсивно вызываем функцию updatePosts через 5 секунд
+        setTimeout(() => updatePosts(watchedState.urls), timeUdpate);
       });
   };
 
@@ -142,7 +142,7 @@ const app = () => {
     const formData = new FormData(e.target);
     const url = formData.get('url').trim(); // Получаем данные того, что ввел пользователь в форме
 
-    validateUrl(url, watchedState.urls) // Асинхронно проверяем является ли URL сайтом (watchedState.urls всегда свежий)
+    validateUrl(url, watchedState.urls)
       .then(() => {
         // Переходим в состояние отправки, если валидно (на предыдущем if прошло корректно)
         watchedState.form = {
