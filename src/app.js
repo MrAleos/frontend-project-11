@@ -9,8 +9,8 @@ import { renderFeed, renderPost, renderForm } from './view.js';
 const timeUdpate = 5000; // время через которое пост обновится
 const defaultLanguage = 'ru'; // язык по умолчанию
 
-const markPostAsRead = (post, postLink, watchedState) => { // функция для того чтобы метить посты прочитанными и добавлять соответствующие стили
-  if (!watchedState.readPosts.includes(post.link)) { // если ссылки поста нет в состоянии прочитанных постов
+const markPostAsRead = (post, postLink, watchedState) => { // функция для метки прочитанных
+  if (!watchedState.readPosts.includes(post.link)) { // если ссылки поста нет среди прочитанных
     watchedState.readPosts.push(post.link); // добавляем ссылку туда и меняем стили
     postLink.classList.add('text-muted');
     postLink.classList.remove('text-primary', 'text-decoration-underline');
@@ -58,7 +58,7 @@ const app = () => {
           return response.data; // иначе возвращаем загруженные данные
         });
     };
-  
+
     const watchedState = onChange(initialState, (path) => {
       switch (path) {
         case 'form':
@@ -77,92 +77,92 @@ const app = () => {
           break;
       }
     });
-  
+
     const createSchema = (existingUrls) => yup.object().shape({
       url: yup.string()
         .url(i18n.t('errors.notUrl')) // Проверка на валидность URL
         .notOneOf(existingUrls, i18n.t('errors.existUrl')), // Проверка на существование URL в массиве
     });
-  
+
     const validateUrl = (url, existingUrls) => {
       const schema = createSchema(existingUrls);
       return schema.validate({ url });
     };
-  
+
     const addPosts = (parseData) => { // функция добавления постов
       watchedState.posts = [...parseData.posts, ...watchedState.posts];
     };
-  
+
     const addFeed = (parseData) => { // функция добавления фида
       watchedState.feeds.unshift(parseData.feed);
     };
-  
+
     const updatePosts = (urls) => {
       const promises = urls.map((url) => load(url));
       Promise.all(promises)
         .then((contents) => {
           const newPosts = []; // создаем пустой массив для новых постов
-  
+
           contents.forEach((content) => { // проходимся по каждому элементу массива contents
             const { posts } = parse(content); // парсим контент и извлекаем массив постов
             const existingPostIds = watchedState.posts.map((post) => post.link);
             const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link));
-  
+
             newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
           });
-  
+
           if (newPosts.length > 0) { // если есть новые посты
             watchedState.posts = [...newPosts, ...watchedState.posts];
           }
         })
-  
+
         .catch(() => {
           // ловим возможные ошибки и выводим в консоль
           console.error('updatePosts error');
         })
-  
+
         .finally(() => {
           setTimeout(() => updatePosts(watchedState.urls), timeUdpate);
         });
     };
-  
+
     updatePosts(watchedState.urls); // начальный вызов функции updatePosts
 
     // слушатель для контейнера постов, чтобы отметить пост прочитанным
     elements.postsContainer.addEventListener('click', (e) => {
-      const target = e.target; // получаем элемент куда кликнули
+      const { target } = e; // получаем элемент куда кликнули
       const postId = target.getAttribute('data-post-id'); // получаем id из атрибутов поста
-    
-      const post = watchedState.posts.find((p) => p.id === postId); // находим пост по совпадению полученного id и id из вотчера постов
+
+      const post = watchedState.posts.find((p) => p.id === postId); // находим пост по id
       if (!post) return; // если пост не найден по id в состоянии, то обрываем работу слушателя
-    
+
       const postLink = elements.postsContainer.querySelector(`a[data-post-id="${postId}"]`); // получаем элемент "а" для дальнейшего изменения стилей через функцию
 
       if (target.tagName === 'A' || target.tagName === 'BUTTON') { // если клик по элменту "а" или "button"
-        markPostAsRead(post, postLink, watchedState); // запускаем функцию для изменения цвета и добавления поста в прочитанные
+        markPostAsRead(post, postLink, watchedState); // запускаем для добавления в прочитанные
       }
     });
-  
+
     // Слушатель для отображения модального окна
     elements.modal.addEventListener('show.bs.modal', (event) => { // добавление обработчика событий на показ модального окна
       const button = event.relatedTarget; // получение кнопки, которая вызвала модальное окно
       const postId = button.getAttribute('data-id'); // берем id поста из атрибута
       const post = watchedState.posts.find((p) => p.id === postId); // ищем пост в вотчере
-      
+
       if (post) { // если пост не пустой (найден id в вотчере)
         const { modalTitle, modalBody, fullArticleLink } = elements;
         modalTitle.textContent = post.title; // установка заголовка модального окна
         modalBody.textContent = post.description; // установка описания модального окна
-        fullArticleLink.href = post.link; // установка ссылки на полную статью в модальном окне 
+        fullArticleLink.href = post.link; // установка ссылки на полную статью в модальном окне
       }
     });
-  
+
     elements.form.addEventListener('submit', (e) => { // Слушатель по кнопке "Добавить" в форме
       e.preventDefault();
       e.stopImmediatePropagation();
       const formData = new FormData(e.target);
       const url = formData.get('url').trim(); // Получаем данные того, что ввел пользователь в форме
-  
+
       validateUrl(url, watchedState.urls)
         .then(() => {
           // Переходим в состояние отправки, если валидно (на предыдущем if прошло корректно)
@@ -172,15 +172,15 @@ const app = () => {
           };
           return load(url); // Вызов функции load после успешного добавления URL
         })
-  
+
         .then((content) => { // и далее уже пробуем парсить данные
           const parseData = parse(content); // Вызов функции parse для парсинга данных
-  
+
           watchedState.urls.push(url); // Обновляем массив через watchedState
-  
+
           addPosts(parseData); // добавление постов
           addFeed(parseData); // добавление фидов
-  
+
           watchedState.form = { // если в try не было ошибки загрузки/парсинга/сети
             status: 'added', // то добавляем состояние успешного добавления Url
             error: '',
