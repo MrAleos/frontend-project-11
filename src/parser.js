@@ -17,7 +17,7 @@ const parse = (content) => { // парсинг данных для переда�
   const feedTitle = feedChannel.querySelector('title').textContent;
   const feedDescription = feedChannel.querySelector('description').textContent;
   const feedId = _.uniqueId('feed_');
-  const feeds = {
+  const feed = {
     title: feedTitle,
     description: feedDescription,
     id: feedId,
@@ -34,7 +34,7 @@ const parse = (content) => { // парсинг данных для переда�
     };
   });
 
-  return { feeds, posts }; // возврат объекта с объектом фида и массивом объектов постов
+  return { feed, posts }; // возврат объекта с объектом фида и массивом объектов постов
 };
 
 export default parse;

@@ -4,9 +4,7 @@ const renderModal = (post, i18n) => { // рендер модалки
   viewButton.textContent = i18n.t('buttons.modalButtonName'); // установка текста кнопки
   viewButton.setAttribute('data-bs-toggle', 'modal'); // добавление атрибута для включения модального окна
   viewButton.setAttribute('data-bs-target', '#modal'); // установка цели модального окна
-  viewButton.setAttribute('data-title', post.title); // установка цели модального окна.
-  viewButton.setAttribute('data-description', post.description); // установка цели модального окна.
-  viewButton.setAttribute('data-link', post.link); // передача ссылки поста в атрибут кнопки.
+  viewButton.setAttribute('data-id', post.id); // передаем id поста в кнопку модалки
   return viewButton;
 };
 
@@ -36,6 +34,7 @@ const renderPost = (watchedState, elements, i18n) => {
     postLink.href = post.link; // задаем ссылку
     postLink.target = '_blank'; // открываем ссылку в новом окне
     postLink.textContent = post.title; // текст ссылки = заголовок поста
+    postLink.setAttribute('data-post-id', post.id); // Добавляем id поста в ссылку для идентификации
 
     // стилизация только после прочтения
     if (watchedState.readPosts.includes(post.link)) {
@@ -43,24 +42,7 @@ const renderPost = (watchedState, elements, i18n) => {
     }
 
     const viewButton = renderModal(post, i18n); // рендерим кнопку с модалкой для поста
-
-    // Слушатель для клика по ссылке поста
-    postLink.addEventListener('click', () => { // если пользователь нажал на пост
-      if (!watchedState.readPosts.includes(post.link)) { // и в прочитанных постах нет id поста
-        watchedState.readPosts.push(post.link); // то, добавляем ID в массив прочитанных
-        postLink.classList.add('text-muted');
-        postLink.classList.remove('text-primary', 'text-decoration-underline');
-      }
-    });
-
-    // Слушатель для кнопки "Просмотр"
-    viewButton.addEventListener('click', () => { // если нажал на кнопку просмотра
-      if (!watchedState.readPosts.includes(post.link)) { // id поста нет в стэйте прочитанных постов
-        watchedState.readPosts.push(post.link); // то, добавляем ID в массив прочитанных
-        postLink.classList.add('text-muted');
-        postLink.classList.remove('text-primary', 'text-decoration-underline');
-      }
-    });
+    viewButton.setAttribute('data-post-id', post.id); // Добавляем id поста в кнопку для идентификации
 
     listItem.append(postLink, viewButton);
     listGroup.append(listItem); // добавляем элемент списка в список постов
@@ -87,17 +69,17 @@ const renderFeed = (watchedState, elements, i18n) => { // рендер фида
   const listGroup = document.createElement('ul'); // список фидов
   listGroup.classList.add('list-group');
 
-  watchedState.feeds.forEach((element) => {
+  watchedState.feeds.forEach((feed) => {
     const listItem = document.createElement('li'); // Создаем элемент списка
     listItem.classList.add('list-group-item', 'border-0');
 
     const feedTitle = document.createElement('h3'); // создаем заголовок фида
     feedTitle.classList.add('h6');
-    feedTitle.textContent = element.title;
+    feedTitle.textContent = feed.title;
 
     const feedDescription = document.createElement('p'); // создаем описание фида
     feedDescription.classList.add('small', 'text-black-50');
-    feedDescription.textContent = element.description;
+    feedDescription.textContent = feed.description;
 
     listItem.append(feedTitle, feedDescription);
     listGroup.append(listItem); // добавляем элемент списка в список фидов
@@ -120,7 +102,7 @@ const enableButton = (elements) => {
 };
 
 const renderForm = (watchedState, elements, i18n) => { // Рендер формы в зависимости от состояния
-  const { feedback } = elements; // фидбэк формы
+  const { feedback, form, input } = elements; // фидбэк формы
 
   switch (watchedState.form.status) {
     case 'filling': // если состояние заполнения
@@ -145,6 +127,8 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
       feedback.textContent = i18n.t('status.successLoadUrl');
       feedback.classList.remove('text-danger');
       feedback.classList.add('text-success');
+      form.reset(); // Сбрасываем форму
+      input.focus(); // Ставим фокус на инпут
       break;
     default:
       break;
