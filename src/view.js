@@ -36,9 +36,13 @@ const renderPost = (watchedState, elements, i18n) => {
     postLink.textContent = post.title; // текст ссылки = заголовок поста
     postLink.setAttribute('data-post-id', post.id); // Добавляем id поста в ссылку для идентификации
 
-    // стилизация только после прочтения
+    // в зависимости от состояния (есть ли пост среди прочитанных) добавляем или убираем классы
     if (watchedState.readPosts.includes(post.link)) {
-      postLink.classList.add('text-muted'); // то добавляем серый цвет
+      postLink.classList.remove('fw-bold', 'text-primary', 'text-decoration-underline');
+      postLink.classList.add('text-muted');
+    } else {
+      postLink.classList.add('fw-bold', 'text-primary', 'text-decoration-underline');
+      postLink.classList.remove('text-muted');
     }
 
     const viewButton = renderModal(post, i18n); // рендерим кнопку с модалкой для поста
@@ -104,17 +108,11 @@ const enableButton = (elements) => {
 const renderForm = (watchedState, elements, i18n) => { // Рендер формы в зависимости от состояния
   const { feedback, form, input } = elements; // фидбэк формы
 
-  switch (watchedState.form.status) {
+  switch (watchedState.form.status) { // проверяем статус состояния
     case 'filling': // если состояние заполнения
-      enableButton(elements); // включаем кнопку добавить
-      if (watchedState.form.error) { // проверяем есть ли ошибка в стейте
-        feedback.textContent = watchedState.form.error; // Выводим сообщение об ошибке
-        feedback.classList.remove('text-success');
-        feedback.classList.add('text-danger');
-      } else { // если нет, то очищаем фидбек и стилизацию после предыдущей ошибки или успеха
-        feedback.textContent = '';
-        feedback.classList.remove('text-danger', 'text-success');
-      }
+      enableButton(elements); // включаем кнопку "добавить"
+      feedback.textContent = ''; // очищаем текст
+      feedback.classList.remove('text-danger', 'text-success');
       break;
 
     case 'sending': // если состояние загрузки
@@ -122,6 +120,7 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
       feedback.textContent = i18n.t('status.loadingUrl');
       feedback.classList.remove('text-danger', 'text-success');
       break;
+    
     case 'added': // если ошибки при загрузке не было, то включаем кнопку и делаем соответствующую стилизацию
       enableButton(elements);
       feedback.textContent = i18n.t('status.successLoadUrl');
@@ -130,6 +129,13 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
       form.reset(); // Сбрасываем форму
       input.focus(); // Ставим фокус на инпут
       break;
+    
+    case 'error': // если получили ошибку
+      enableButton(elements); // кнопка досупна, чтобы пользователь исправил данные
+      feedback.textContent = watchedState.form.error; // сообщение об ошибке
+      feedback.classList.remove('text-success'); // стилизация
+      feedback.classList.add('text-danger');
+      input.focus(); // фокус на инпут сразу для пользователя
     default:
       break;
   }

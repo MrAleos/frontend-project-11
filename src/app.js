@@ -9,14 +9,6 @@ import { renderFeed, renderPost, renderForm } from './view.js';
 const timeUdpate = 5000; // время через которое пост обновится
 const defaultLanguage = 'ru'; // язык по умолчанию
 
-const markPostAsRead = (post, postLink, watchedState) => { // функция для метки прочитанных
-  if (!watchedState.readPosts.includes(post.link)) { // если ссылки поста нет среди прочитанных
-    watchedState.readPosts.push(post.link); // добавляем ссылку туда и меняем стили
-    postLink.classList.add('text-muted');
-    postLink.classList.remove('text-primary', 'text-decoration-underline');
-  }
-};
-
 const app = () => {
   const elements = {
     form: document.querySelector('.rss-form'), // Находим форму в разметке
@@ -33,7 +25,7 @@ const app = () => {
 
   const initialState = {
     form: {
-      status: 'filling', // filling -> sending -> added
+      status: 'filling', // filling -> sending -> added - error
       error: '',
     },
     urls: [], // хранение добавленных url для проверки на то указывал их пользователь или нет
@@ -98,19 +90,26 @@ const app = () => {
     };
 
     const updatePosts = (urls) => {
-      const promises = urls.map((url) => load(url));
+      const promises = urls.map((url) => load(url)
+        .then((responce) => ({ success: true, data: responce })) // успешный запрос
+        .catch((error) => ({ success: false, error })) // ошибка в запросе
+      );
+
       Promise.all(promises)
-        .then((contents) => {
+        .then((results) => {
           const newPosts = []; // создаем пустой массив для новых постов
 
-          contents.forEach((content) => { // проходимся по каждому элементу массива contents
-            const { posts } = parse(content); // парсим контент и извлекаем массив постов
-            const existingPostIds = watchedState.posts.map((post) => post.link);
-            const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link));
-
-            newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
+          results.forEach((result) => { // проходимся по каждому элементу массива contents
+            if (result.success) { // парсим только для успешных запросов
+              const { posts } = parse(result.data); // парсим контент и извлекаем массив постов
+              const existingPostIds = watchedState.posts.map((post) => post.link);
+              const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link));
+              newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
+            } else {
+              console.log(`Ошибка загрузки: ${result.error}`); // ошибка для конкретных запросов
+            }                                                       
           });
-
+                                      
           if (newPosts.length > 0) { // если есть новые посты
             watchedState.posts = [...newPosts, ...watchedState.posts];
           }
@@ -118,7 +117,7 @@ const app = () => {
 
         .catch(() => {
           // ловим возможные ошибки и выводим в консоль
-          console.error('updatePosts error');
+          console.error('Promise.all error');
         })
 
         .finally(() => {
@@ -136,10 +135,10 @@ const app = () => {
       const post = watchedState.posts.find((p) => p.id === postId); // находим пост по id
       if (!post) return; // если пост не найден по id в состоянии, то обрываем работу слушателя
 
-      const postLink = elements.postsContainer.querySelector(`a[data-post-id="${postId}"]`); // получаем элемент "а" для дальнейшего изменения стилей через функцию
-
       if (target.tagName === 'A' || target.tagName === 'BUTTON') { // если клик по элменту "а" или "button"
-        markPostAsRead(post, postLink, watchedState); // запускаем для добавления в прочитанные
+        if (!watchedState.readPosts.includes(post.link)) { // если поста нет среди прочитанных
+          watchedState.readPosts.push(post.link); // обновляем состояние среди прочитанных
+        }
       }
     });
 
@@ -194,7 +193,7 @@ const app = () => {
             errorMessage = error.message === 'invalidRSS' ? i18n.t('errors.notRssUrl') : i18n.t('errors.networkError'); // или ошибка парсинга, либо сети
           }
           watchedState.form = {
-            status: 'filling', // возвращаем состояние статус "заполнения"
+            status: 'error', // переходим в статус "ошибка", если попадаем в catch
             error: errorMessage,
           };
         });
