@@ -30,7 +30,6 @@ const renderPost = (watchedState, elements, i18n) => {
     listItem.classList.add('list-group-item', 'border-0', 'd-flex', 'justify-content-between', 'align-items-start');
 
     const postLink = document.createElement('a'); // создаем ссылку для заголовка
-    postLink.classList.add('fw-bold'); // стили для синего цвета и подчеркивания
     postLink.href = post.link; // задаем ссылку
     postLink.target = '_blank'; // открываем ссылку в новом окне
     postLink.textContent = post.title; // текст ссылки = заголовок поста
@@ -38,10 +37,10 @@ const renderPost = (watchedState, elements, i18n) => {
 
     // в зависимости от состояния (есть ли пост среди прочитанных) добавляем или убираем классы
     if (watchedState.readPosts.includes(post.link)) {
-      postLink.classList.remove('fw-bold', 'text-primary', 'text-decoration-underline');
+      postLink.classList.remove('fw-bold');
       postLink.classList.add('text-muted');
     } else {
-      postLink.classList.add('fw-bold', 'text-primary', 'text-decoration-underline');
+      postLink.classList.add('fw-bold');
       postLink.classList.remove('text-muted');
     }
 
@@ -120,7 +119,7 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
       feedback.textContent = i18n.t('status.loadingUrl');
       feedback.classList.remove('text-danger', 'text-success');
       break;
-    
+
     case 'added': // если ошибки при загрузке не было, то включаем кнопку и делаем соответствующую стилизацию
       enableButton(elements);
       feedback.textContent = i18n.t('status.successLoadUrl');
@@ -129,13 +128,14 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
       form.reset(); // Сбрасываем форму
       input.focus(); // Ставим фокус на инпут
       break;
-    
+
     case 'error': // если получили ошибку
       enableButton(elements); // кнопка досупна, чтобы пользователь исправил данные
       feedback.textContent = watchedState.form.error; // сообщение об ошибке
       feedback.classList.remove('text-success'); // стилизация
       feedback.classList.add('text-danger');
       input.focus(); // фокус на инпут сразу для пользователя
+      break;
     default:
       break;
   }

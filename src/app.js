@@ -92,8 +92,7 @@ const app = () => {
     const updatePosts = (urls) => {
       const promises = urls.map((url) => load(url)
         .then((responce) => ({ success: true, data: responce })) // успешный запрос
-        .catch((error) => ({ success: false, error })) // ошибка в запросе
-      );
+        .catch((error) => ({ success: false, error }))); // ошибка в запросе
 
       Promise.all(promises)
         .then((results) => {
@@ -104,12 +103,12 @@ const app = () => {
               const { posts } = parse(result.data); // парсим контент и извлекаем массив постов
               const existingPostIds = watchedState.posts.map((post) => post.link);
               const filteredPosts = posts.filter((post) => !existingPostIds.includes(post.link));
-              newPosts.unshift(...filteredPosts); // добавляем отфильтрованные посты в массив newPosts
+              newPosts.unshift(...filteredPosts); // добавим отфильтрованные посты в массив newPosts
             } else {
               console.log(`Ошибка загрузки: ${result.error}`); // ошибка для конкретных запросов
-            }                                                       
+            }
           });
-                                      
+
           if (newPosts.length > 0) { // если есть новые посты
             watchedState.posts = [...newPosts, ...watchedState.posts];
           }
