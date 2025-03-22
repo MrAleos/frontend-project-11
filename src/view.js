@@ -8,6 +8,13 @@ const renderModal = (post, i18n) => { // рендер модалки
   return viewButton;
 };
 
+const renderModalContent = (post, elements) => { // рендер контента модалки
+  const { modalTitle, modalBody, fullArticleLink } = elements;
+  modalTitle.textContent = post.title; // установка заголовка модального окна
+  modalBody.textContent = post.description; // установка описания модального окна
+  fullArticleLink.href = post.link; // установка ссылки на полную статью в модальном окне
+};
+
 const renderPost = (watchedState, elements, i18n) => {
   const { postsContainer } = elements;
   postsContainer.innerHTML = '';
@@ -141,4 +148,6 @@ const renderForm = (watchedState, elements, i18n) => { // Рендер форм�
   }
 };
 
-export { renderFeed, renderForm, renderPost };
+export {
+  renderFeed, renderForm, renderPost, renderModalContent,
+};

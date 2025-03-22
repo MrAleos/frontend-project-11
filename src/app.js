@@ -2,9 +2,12 @@ import * as yup from 'yup';
 import onChange from 'on-change';
 import axios from 'axios';
 import i18next from 'i18next';
+import _ from 'lodash';
 import resources from './locales/index.js';
 import parse from './parser.js';
-import { renderFeed, renderPost, renderForm } from './view.js';
+import {
+  renderFeed, renderPost, renderForm, renderModalContent,
+} from './view.js';
 
 const timeUdpate = 5000; // время через которое пост обновится
 const defaultLanguage = 'ru'; // язык по умолчанию
@@ -21,6 +24,21 @@ const app = () => {
     modalBody: document.querySelector('.modal-body'), // получение элемента тела модального окна
     fullArticleLink: document.querySelector('.full-article'), // получение элемента ссылки на полную статью
     postsContainer: document.querySelector('.posts'), // получение постов
+  };
+
+  const load = (url, i18n) => { // функция для загрузки данных с переданного пользователем сайта
+    const baseUrl = 'https://allorigins.hexlet.app/get';
+    const urlObj = new URL(baseUrl); // объект URL
+    urlObj.searchParams.set('disableCache', 'true'); // параметр disableCache
+    urlObj.searchParams.set('url', url); // добавляем параметр url
+    const fullUrl = urlObj.toString(); // делаем строку
+    return axios(fullUrl) // грузим данные с url
+      .then((response) => {
+        if (response.status !== 200) { // затем, если загрузка не прошла успешно выдаем ошибку
+          throw new Error(i18n.t('errors.networkError'));
+        }
+        return response.data; // иначе возвращаем загруженные данные
+      });
   };
 
   const initialState = {
@@ -40,17 +58,6 @@ const app = () => {
     debug: true,
     resources,
   }).then(() => {
-    const load = (url) => { // функция для загрузки данных с переданного пользователем сайта
-      const fullUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
-      return axios(fullUrl) // грузим данные с url
-        .then((response) => {
-          if (response.status !== 200) { // затем, если загрузка не прошла успешно выдаем ошибку
-            throw new Error(i18n.t('errors.networkError'));
-          }
-          return response.data; // иначе возвращаем загруженные данные
-        });
-    };
-
     const watchedState = onChange(initialState, (path) => {
       switch (path) {
         case 'form':
@@ -81,16 +88,21 @@ const app = () => {
       return schema.validate({ url });
     };
 
-    const addPosts = (parseData) => { // функция добавления постов
-      watchedState.posts = [...parseData.posts, ...watchedState.posts];
-    };
+    const addFeedAndPosts = (parseData) => { // добавление фида и постов
+      const feedId = _.uniqueId('feed_'); // генерируем id для фида
+      const feed = { ...parseData.feed, id: feedId }; // Добавляем id к фиду
+      watchedState.feeds.unshift(feed); // добавляем в стэйт фидов
 
-    const addFeed = (parseData) => { // функция добавления фида
-      watchedState.feeds.unshift(parseData.feed);
+      const postsWithIds = parseData.posts.map((post) => ({
+        ...post,
+        id: _.uniqueId('post_'), // id для каждого поста
+        feedId, // feedId для связи с фидом
+      }));
+      watchedState.posts = [...postsWithIds, ...watchedState.posts]; // добавляем новые посты
     };
 
     const updatePosts = (urls) => {
-      const promises = urls.map((url) => load(url)
+      const promises = urls.map((url) => load(url, i18n)
         .then((responce) => ({ success: true, data: responce })) // успешный запрос
         .catch((error) => ({ success: false, error }))); // ошибка в запросе
 
@@ -148,10 +160,7 @@ const app = () => {
       const post = watchedState.posts.find((p) => p.id === postId); // ищем пост в вотчере
 
       if (post) { // если пост не пустой (найден id в вотчере)
-        const { modalTitle, modalBody, fullArticleLink } = elements;
-        modalTitle.textContent = post.title; // установка заголовка модального окна
-        modalBody.textContent = post.description; // установка описания модального окна
-        fullArticleLink.href = post.link; // установка ссылки на полную статью в модальном окне
+        renderModalContent(post, elements); // то рендерим контент модалки
       }
     });
 
@@ -168,7 +177,7 @@ const app = () => {
             status: 'sending',
             error: '',
           };
-          return load(url); // Вызов функции load после успешного добавления URL
+          return load(url, i18n); // Вызов функции load после успешного добавления URL
         })
 
         .then((content) => { // и далее уже пробуем парсить данные
@@ -176,8 +185,7 @@ const app = () => {
 
           watchedState.urls.push(url); // Обновляем массив через watchedState
 
-          addPosts(parseData); // добавление постов
-          addFeed(parseData); // добавление фидов
+          addFeedAndPosts(parseData); // добавление фидов и постов
 
           watchedState.form = { // если в try не было ошибки загрузки/парсинга/сети
             status: 'added', // то добавляем состояние успешного добавления Url

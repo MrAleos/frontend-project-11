@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 const parse = (content) => { // парсинг данных для передачи в рендеры
   const parser = new DOMParser();
   const xmlData = parser.parseFromString(content.contents, 'application/xml');
@@ -16,21 +14,18 @@ const parse = (content) => { // парсинг данных для переда�
 
   const feedTitle = feedChannel.querySelector('title').textContent;
   const feedDescription = feedChannel.querySelector('description').textContent;
-  const feedId = _.uniqueId('feed_');
   const feed = {
     title: feedTitle,
     description: feedDescription,
-    id: feedId,
   };
 
   const posts = Array.from(xmlData.querySelectorAll('item')).map((item) => { // получение данных по каждому посту
-    const id = _.uniqueId('post_');
     const title = item.querySelector('title').textContent;
     const description = item.querySelector('description').textContent;
     const link = item.querySelector('link').textContent;
 
     return {
-      title, description, link, id, feedId,
+      title, description, link,
     };
   });
 
