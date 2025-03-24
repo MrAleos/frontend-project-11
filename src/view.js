@@ -8,8 +8,16 @@ const renderModal = (post, i18n) => { // рендер модалки
   return viewButton;
 };
 
-const renderModalContent = (post, elements) => { // рендер контента модалки
+const renderModalContent = (watchedState, elements) => { // рендер контента модалки
   const { modalTitle, modalBody, fullArticleLink } = elements;
+  
+  if (!watchedState.modal) { // если в состоянии нет данных модалки
+    return; // модалка закрыта
+  }
+
+  const post = watchedState.posts.find((p) => p.id === watchedState.modal.postId); // ищем пост
+  if (!post) return; // если нет поста, то прекращаем
+
   modalTitle.textContent = post.title; // установка заголовка модального окна
   modalBody.textContent = post.description; // установка описания модального окна
   fullArticleLink.href = post.link; // установка ссылки на полную статью в модальном окне

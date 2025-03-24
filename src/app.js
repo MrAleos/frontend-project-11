@@ -50,6 +50,7 @@ const app = () => {
     feeds: [],
     posts: [],
     readPosts: [], // массив для хранения ID прочитанных постов
+    modal: null, // данные открытой модалки (сначала закрыта)
   };
 
   const i18n = i18next.createInstance(); // создаем i18n для текстов
@@ -71,6 +72,9 @@ const app = () => {
           break;
         case 'readPosts':
           renderPost(watchedState, elements, i18n);
+          break;
+          case 'modal': // если изменилось поле
+            renderModalContent(watchedState, elements); // рендерим модалку
           break;
         default:
           break;
@@ -160,7 +164,9 @@ const app = () => {
       const post = watchedState.posts.find((p) => p.id === postId); // ищем пост в вотчере
 
       if (post) { // если пост не пустой (найден id в вотчере)
-        renderModalContent(post, elements); // то рендерим контент модалки
+        watchedState.modal = { // обнова состояния
+          postId: post.id,
+        }; // записываем id поста и вызов renderModalContent
       }
     });
 
