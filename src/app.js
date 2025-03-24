@@ -73,8 +73,8 @@ const app = () => {
         case 'readPosts':
           renderPost(watchedState, elements, i18n);
           break;
-          case 'modal': // если изменилось поле
-            renderModalContent(watchedState, elements); // рендерим модалку
+        case 'modal': // если изменилось поле
+          renderModalContent(watchedState, elements); // рендерим модалку
           break;
         default:
           break;

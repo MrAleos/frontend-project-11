@@ -10,7 +10,7 @@ const renderModal = (post, i18n) => { // рендер модалки
 
 const renderModalContent = (watchedState, elements) => { // рендер контента модалки
   const { modalTitle, modalBody, fullArticleLink } = elements;
-  
+
   if (!watchedState.modal) { // если в состоянии нет данных модалки
     return; // модалка закрыта
   }
